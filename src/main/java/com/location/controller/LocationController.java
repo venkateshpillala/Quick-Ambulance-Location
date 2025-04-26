@@ -69,7 +69,7 @@ public class LocationController {
 			messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(),
 					locationService.getFullAddress(location));
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(), e.getMessage());
+			messagingTemplate.convertAndSend("/topic/error/" + location.getUsername(), e.getMessage());
 		}
 	}
 
@@ -84,7 +84,7 @@ public class LocationController {
 			messagingTemplate.convertAndSend("/topic/near-by-ambulance/" + userLiveLocation.getUsername(),
 					nearByDrivers);
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/location-name/" + userLiveLocation.getUsername(), e.getMessage());
+			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(), e.getMessage());
 		}
 	}
 
@@ -104,7 +104,7 @@ public class LocationController {
 				messagingTemplate.convertAndSend(topic, message);
 			}
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/location-name/" + userLiveLocation.getUsername(), e.getMessage());
+			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(), e.getMessage());
 		}
 	}
 
@@ -153,9 +153,9 @@ public class LocationController {
 				messagingTemplate.convertAndSend(driverTopic, driverDTO);
 			}
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getUserUsername(),
+			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getUserUsername(),
 					e.getMessage());
-			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getDriverUsername(),
+			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getDriverUsername(),
 					e.getMessage());
 
 		}
@@ -184,9 +184,9 @@ public class LocationController {
 			if (Math.abs(distance - 1.0) < 0.1)
 				bookStore.remove(userLiveLocation.getUsername());
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getUserUsername(),
+			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getUserUsername(),
 					e.getMessage());
-			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getDriverUsername(),
+			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getDriverUsername(),
 					e.getMessage());
 
 		}
