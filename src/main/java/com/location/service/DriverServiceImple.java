@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.location.dto.Driver;
+import com.location.exception.ResourceNotFoundException;
 import com.location.fiegn.IDriverFeignService;
 @Service
 public class DriverServiceImple implements IDriverService {
@@ -13,7 +14,10 @@ public class DriverServiceImple implements IDriverService {
 
 	@Override
 	public Driver getDriverByUsername(String username) {
-		return driverFeign.findByUsername(username).getBody();
+		Driver driver = driverFeign.findByUsername(username).getBody();
+		if(driver != null)
+			throw new ResourceNotFoundException("RESOURCE_NOT_FOUND "+username);
+		return driver;
 	}
 
 }

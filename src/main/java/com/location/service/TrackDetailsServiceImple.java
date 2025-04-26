@@ -14,7 +14,10 @@ public class TrackDetailsServiceImple implements ITrackDetailsService {
 	
 	@Override
 	public Long saveBookingDetails(TrackDetailsDTO trackDeatails) {
-		return feignService.saveTrackDetails(trackDeatails).getBody();
+		Long status = feignService.saveTrackDetails(trackDeatails).getBody();
+		if(status == null)
+			throw new RuntimeException("INTERNAL_SERVER_ERROR_not_saved");
+		return status;
 	}
 
 }

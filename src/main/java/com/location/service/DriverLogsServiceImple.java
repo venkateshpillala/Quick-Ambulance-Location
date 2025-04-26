@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.location.dto.DriverLogs;
+import com.location.exception.ResourceNotFoundException;
 import com.location.fiegn.IDriverLogsFeignService;
 
 @Service
@@ -16,7 +17,10 @@ public class DriverLogsServiceImple implements IDriverLogsService {
 
 	@Override
 	public DriverLogs getDriverLogsByUsernameAndDate(String username) {
-		return driverFeign.getDriverLogsByUsernameAndDate(username, LocalDate.now()).getBody();
+		DriverLogs dl = driverFeign.getDriverLogsByUsernameAndDate(username, LocalDate.now()).getBody();
+		if(dl != null)
+			throw new ResourceNotFoundException("RESOURCE_NOT_FOUND "+username);
+		return dl;
 	}
 
 }

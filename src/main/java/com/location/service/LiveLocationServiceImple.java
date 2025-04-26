@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.location.dto.LiveLocation;
+import com.location.exception.ResourceNotFoundException;
 import com.location.fiegn.ILiveLocationFeignService;
 
 @Service
@@ -18,12 +19,17 @@ public class LiveLocationServiceImple implements ILiveLocationService {
 	@Override
 	public String saveDriverLiveLocation(LiveLocation liveLocation) {
 		String username = feignService.saveDriverLiveLocation(liveLocation).getBody();
+		if(username == null)
+			throw new RuntimeException("INTERNAL_SERVER_ERROR_not_Saved");
 		return username;
 	}
 
 	@Override
 	public List<LiveLocation> getNearByDrivers(LiveLocation userLiveLocation) {
 		List<LiveLocation> list = feignService.getAllDriverLiveLocations().getBody();
+		if(list == null)
+			throw new ResourceNotFoundException("NO_DRIVERS_AVAILABLE");
+		
 		List<LiveLocation> nearByDrivers = new ArrayList<LiveLocation>();
 		for(LiveLocation driverLiveLocation:list) {
 			Double distance = this.calculateDistance(userLiveLocation, driverLiveLocation);
