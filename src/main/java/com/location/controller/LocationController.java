@@ -52,113 +52,144 @@ public class LocationController {
 	private IDriverService driverService;
 
 	/*
-	 * Front-end sends users(driver, user) live location(longitude and latitude) for every 3 seconds
-	 * If user -> directly sends location name 
-	 * If driver -> Maintain location in DB and sends location name
+	 * Front-end sends users(driver, user) live location(longitude and latitude) for
+	 * every 3 seconds If user -> directly sends location name If driver -> Maintain
+	 * location in DB and sends location name
 	 */
-	
+
 	@MessageMapping("/live-location")
 	public void sendLocationName(LiveLocation location) {
 		System.out.println(location);
+		try {
+			String role = roleService.getRoleByUsername(location.getUsername()).getRole();
+			if (role.equalsIgnoreCase("DRIVER")) {
+				String username = liveLocationService.saveDriverLiveLocation(location);
+			}
 
-		String role = roleService.getRoleByUsername(location.getUsername()).getRole();
-		if (role.equalsIgnoreCase("DRIVER")) {
-			String username = liveLocationService.saveDriverLiveLocation(location);
+			messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(),
+					locationService.getFullAddress(location));
+		} catch (Exception e) {
+			messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(), e.getMessage());
 		}
-
-		messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(), locationService.getFullAddress(location));
 	}
-	
+
 	/*
 	 * This methods sends all near by driver locations to show on user's Map
 	 */
-	
+
 	@MessageMapping("/driver-locations")
 	public void nearByAmbulance(LiveLocation userLiveLocation) {
-		List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
-		messagingTemplate.convertAndSend("/topic/near-by-ambulance/" + userLiveLocation.getUsername(), nearByDrivers);
+		try {
+			List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
+			messagingTemplate.convertAndSend("/topic/near-by-ambulance/" + userLiveLocation.getUsername(),
+					nearByDrivers);
+		} catch (Exception e) {
+			messagingTemplate.convertAndSend("/topic/location-name/" + userLiveLocation.getUsername(), e.getMessage());
+		}
 	}
 
 	/*
-	 * When user clicks on Book button, this method sends an alert messages to all the drivers
-	 * near by 20KM radius
+	 * When user clicks on Book button, this method sends an alert messages to all
+	 * the drivers near by 20KM radius
 	 */
-	
+
 	@MessageMapping("/book")
 	public void bookAmbulance(LiveLocation userLiveLocation) {
-		bookStore.save(userLiveLocation.getUsername(), userLiveLocation);
-		List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
-		for (LiveLocation driverLiveLocation : nearByDrivers) {
-			String message = userLiveLocation.getUsername();
-			String topic = "/topic/alert/" + driverLiveLocation.getUsername();
-			messagingTemplate.convertAndSend(topic, message);
+		try {
+			bookStore.save(userLiveLocation.getUsername(), userLiveLocation);
+			List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
+			for (LiveLocation driverLiveLocation : nearByDrivers) {
+				String message = userLiveLocation.getUsername();
+				String topic = "/topic/alert/" + driverLiveLocation.getUsername();
+				messagingTemplate.convertAndSend(topic, message);
+			}
+		} catch (Exception e) {
+			messagingTemplate.convertAndSend("/topic/location-name/" + userLiveLocation.getUsername(), e.getMessage());
 		}
 	}
-	
+
 	/*
-	 * If any one driver accepts the booking, this method save the booking details in DB and
-	 * send user details to driver and driver details to user
+	 * If any one driver accepts the booking, this method save the booking details
+	 * in DB and send user details to driver and driver details to user
 	 */
-	
+
 	@MessageMapping("/accept")
 	public void acceptBooking(BookingInfo driverLiveLocation) {
-		LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
-		String vehicleNumber = driverLogsService.getDriverLogsByUsernameAndDate(driverLiveLocation.getDriverUsername())
-				.getAmbulance().getVehicleNumber();
-		Long driverPhone = driverService.getDriverByUsername(driverLiveLocation.getDriverUsername()).getPhone();
-		Long userPhone = userService.findUserByUsername(userLiveLocation.getUsername()).getPhone();
-		Double distance = liveLocationService.calculateDistance(userLiveLocation, this.convert(driverLiveLocation))/1000.0;
-		Long status = 0L;
-		
-		if (userLiveLocation.getUsername().equals(driverLiveLocation.getUserUsername())) {
-			TrackDetailsDTO trackDetailsDto = new TrackDetailsDTO();
-			trackDetailsDto.setDriverName(driverLiveLocation.getDriverUsername());
-			trackDetailsDto.setUsername(userLiveLocation.getUsername());
-			trackDetailsDto.setVehicleNumber(vehicleNumber);
-			trackDetailsDto.setPickup(this.convertLocationToString(userLiveLocation));
+		try {
+			LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
+			String vehicleNumber = driverLogsService
+					.getDriverLogsByUsernameAndDate(driverLiveLocation.getDriverUsername()).getAmbulance()
+					.getVehicleNumber();
+			Long driverPhone = driverService.getDriverByUsername(driverLiveLocation.getDriverUsername()).getPhone();
+			Long userPhone = userService.findUserByUsername(userLiveLocation.getUsername()).getPhone();
+			Double distance = liveLocationService.calculateDistance(userLiveLocation, this.convert(driverLiveLocation))
+					/ 1000.0;
+			Long status = 0L;
 
-			status = trackService.saveBookingDetails(trackDetailsDto);
-		}
-		
-		UserTransferDTO userDTO = null;
-		DriverTransferDTO driverDTO = null;
+			if (userLiveLocation.getUsername().equals(driverLiveLocation.getUserUsername())) {
+				TrackDetailsDTO trackDetailsDto = new TrackDetailsDTO();
+				trackDetailsDto.setDriverName(driverLiveLocation.getDriverUsername());
+				trackDetailsDto.setUsername(userLiveLocation.getUsername());
+				trackDetailsDto.setVehicleNumber(vehicleNumber);
+				trackDetailsDto.setPickup(this.convertLocationToString(userLiveLocation));
 
-		if (status != 0) {
-			userDTO = new UserTransferDTO(driverLiveLocation.getDriverUsername(), vehicleNumber,
-					driverLiveLocation.getLongitude(), driverLiveLocation.getLatitude(), driverPhone, distance);
-			driverDTO = new DriverTransferDTO(userLiveLocation.getUsername(), userLiveLocation.getLongitude(),
-					userLiveLocation.getLatitude(), userPhone, distance);
-		}
+				status = trackService.saveBookingDetails(trackDetailsDto);
+			}
 
-		if (userDTO != null && driverDTO != null) {
-			String userTopic = "/topic/user/" + userLiveLocation.getUsername();
-			String driverTopic = "/topic/driver/" + driverLiveLocation.getDriverUsername();
-			messagingTemplate.convertAndSend(userTopic, userDTO);
-			messagingTemplate.convertAndSend(driverTopic, driverDTO);
+			UserTransferDTO userDTO = null;
+			DriverTransferDTO driverDTO = null;
+
+			if (status != 0) {
+				userDTO = new UserTransferDTO(driverLiveLocation.getDriverUsername(), vehicleNumber,
+						driverLiveLocation.getLongitude(), driverLiveLocation.getLatitude(), driverPhone, distance);
+				driverDTO = new DriverTransferDTO(userLiveLocation.getUsername(), userLiveLocation.getLongitude(),
+						userLiveLocation.getLatitude(), userPhone, distance);
+			}
+
+			if (userDTO != null && driverDTO != null) {
+				String userTopic = "/topic/user/" + userLiveLocation.getUsername();
+				String driverTopic = "/topic/driver/" + driverLiveLocation.getDriverUsername();
+				messagingTemplate.convertAndSend(userTopic, userDTO);
+				messagingTemplate.convertAndSend(driverTopic, driverDTO);
+			}
+		} catch (Exception e) {
+			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getUserUsername(),
+					e.getMessage());
+			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getDriverUsername(),
+					e.getMessage());
+
 		}
 	}
 
 	@MessageMapping("/driver-live-updates")
 	public void sendDriverLive(BookingInfo driverLiveLocation) {
-		LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
-		Double distance = liveLocationService.calculateDistance(userLiveLocation, this.convert(driverLiveLocation));
+		try {
+			LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
+			Double distance = liveLocationService.calculateDistance(userLiveLocation, this.convert(driverLiveLocation));
 
-		UserTransferDTO userDTO = null;
-		DriverTransferDTO driverDTO = null;
-		
-		userDTO = new UserTransferDTO(driverLiveLocation.getDriverUsername(), null,
-					driverLiveLocation.getLongitude(), driverLiveLocation.getLatitude(), null, distance/1000.0);
-		driverDTO = new DriverTransferDTO(userLiveLocation.getUsername(), userLiveLocation.getLongitude(),
-					userLiveLocation.getLatitude(), null, distance/1000.0);
+			UserTransferDTO userDTO = null;
+			DriverTransferDTO driverDTO = null;
 
-		if (userDTO != null && driverDTO != null) {
-			String userTopic = "/topic/user/" + userLiveLocation.getUsername();
-			String driverTopic = "/topic/driver/" + driverLiveLocation.getDriverUsername();
-			messagingTemplate.convertAndSend(userTopic, userDTO);
-			messagingTemplate.convertAndSend(driverTopic, driverDTO);
+			userDTO = new UserTransferDTO(driverLiveLocation.getDriverUsername(), null,
+					driverLiveLocation.getLongitude(), driverLiveLocation.getLatitude(), null, distance / 1000.0);
+			driverDTO = new DriverTransferDTO(userLiveLocation.getUsername(), userLiveLocation.getLongitude(),
+					userLiveLocation.getLatitude(), null, distance / 1000.0);
+
+			if (userDTO != null && driverDTO != null) {
+				String userTopic = "/topic/user/" + userLiveLocation.getUsername();
+				String driverTopic = "/topic/driver/" + driverLiveLocation.getDriverUsername();
+				messagingTemplate.convertAndSend(userTopic, userDTO);
+				messagingTemplate.convertAndSend(driverTopic, driverDTO);
+			}
+			if (Math.abs(distance - 1.0) < 0.1)
+				bookStore.remove(userLiveLocation.getUsername());
+		} catch (Exception e) {
+			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getUserUsername(),
+					e.getMessage());
+			messagingTemplate.convertAndSend("/topic/location-name/" + driverLiveLocation.getDriverUsername(),
+					e.getMessage());
+
 		}
-		if (Math.abs(distance - 1.0) < 0.1) 
-			bookStore.remove(userLiveLocation.getUsername());
 	}
 
 	private LiveLocation convert(BookingInfo info) {
@@ -176,7 +207,5 @@ public class LocationController {
 				+ locationService.getFullAddress(live).getAddresses().get(0).getAddress().getMunicipality();
 		return pickup;
 	}
-	
-
 
 }
