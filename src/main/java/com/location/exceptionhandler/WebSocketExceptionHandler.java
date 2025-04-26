@@ -17,11 +17,11 @@ public class WebSocketExceptionHandler {
     
     @MessageExceptionHandler(ResourceNotFoundException.class)
     public void handleResourceNotFoundException(ResourceNotFoundException ex) {
-        messagingTemplate.convertAndSend("/topic/error", ex.getMessage()); 
+        messagingTemplate.convertAndSend("/topic/error", "{ \"error\": \"" + ex.getMessage().replace("\"", "\\\"") + "\" }"); 
     }
 
     @MessageExceptionHandler(Exception.class)
     public void handleException(Exception ex) {
-        messagingTemplate.convertAndSend("/topic/error", ex.getMessage()); 
+        messagingTemplate.convertAndSend("/topic/error", "{ \"error\": \"" + ex.getMessage().replace("\"", "\\\"") + "\" }"); 
     }
 }
