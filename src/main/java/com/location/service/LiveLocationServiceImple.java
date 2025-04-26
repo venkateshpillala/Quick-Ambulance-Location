@@ -35,7 +35,7 @@ public class LiveLocationServiceImple implements ILiveLocationService {
 
 	@Override
 	public double calculateDistance(LiveLocation userLiveLocation, LiveLocation driverLiveLocation) {
-	    final double EARTH_RADIUS_KM = 6371.0;
+	    final double EARTH_RADIUS_KM = 6371000;
 
 	    double lat1 = userLiveLocation.getLatitude();
 	    double lon1 = userLiveLocation.getLongitude();

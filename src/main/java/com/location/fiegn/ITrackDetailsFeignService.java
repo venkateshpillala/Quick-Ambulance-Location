@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.location.dto.TrackDetailsDTO;
 
-@FeignClient(name="QUICK-AMBULANCE-DATABASE")
+@FeignClient(name = "QUICK-AMBULANCE-DATABASE", url="https://quick-ambulance-database.onrender.com")
 public interface ITrackDetailsFeignService {
 	@PostMapping("/track-details")
 	public ResponseEntity<Long> saveTrackDetails(@RequestBody TrackDetailsDTO dto);
