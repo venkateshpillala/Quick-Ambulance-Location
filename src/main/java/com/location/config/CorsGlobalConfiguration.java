@@ -23,7 +23,7 @@ public class CorsGlobalConfiguration {
                 ServerHttpResponse response = exchange.getResponse();
                 HttpHeaders headers = response.getHeaders();
                 headers.add("Access-Control-Allow-Origin", "http://localhost:5173"); // Your frontend domain
-                headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                headers.add("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
                 headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type");
                 headers.add("Access-Control-Allow-Credentials", "true");
             }
