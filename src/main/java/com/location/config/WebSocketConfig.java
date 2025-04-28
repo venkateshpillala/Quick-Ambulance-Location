@@ -9,10 +9,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
+	
+	String [] allowedOrigins = {"null","http://localhost:5173"};
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+		registry.addEndpoint("/ws").setAllowedOriginPatterns(allowedOrigins).withSockJS();
 	}
 	
 	@Override
