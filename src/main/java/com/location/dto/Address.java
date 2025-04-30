@@ -4,12 +4,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Address {
+	private String locality;
 	private String streetNumber;
     private String streetName;
     private String municipality;
     private String country;
     private String postalCode;
     private String countryCode;
+    
+    public String getLocality() {
+    	return locality;
+    }
+    public void setLocality(String locality) {
+    	this.locality = locality;
+    }
 	public String getStreetNumber() {
 		return streetNumber;
 	}

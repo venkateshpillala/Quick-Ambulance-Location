@@ -51,25 +51,24 @@ public class LocationController {
 	@Autowired
 	private IDriverService driverService;
 
-	/*
-	 * Front-end sends users(driver, user) live location(longitude and latitude) for
-	 * every 3 seconds If user -> directly sends location name If driver -> Maintain
-	 * location in DB and sends location name
-	 */
+	
+	@MessageMapping("/test")
+	public void testMethod(LiveLocation location) {
+		messagingTemplate.convertAndSend("/topic/test/" + location.getUsername(), location);
+	}
 
+	/*
+	 * This method sends driver's longitude and latitude for every 3 seconds to the back end
+	 * and back end live location the data in DB 
+	 */
 	@MessageMapping("/live-location")
 	public void sendLocationName(LiveLocation location) {
 		System.out.println(location);
 		try {
-			String role = roleService.getRoleByUsername(location.getUsername()).getRole();
-			if (role.equalsIgnoreCase("DRIVER")) {
-				String username = liveLocationService.saveDriverLiveLocation(location);
-			}
-
-			messagingTemplate.convertAndSend("/topic/location-name/" + location.getUsername(),
-					locationService.getFullAddress(location));
+			String username = liveLocationService.saveDriverLiveLocation(location);
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/error/" + location.getUsername(), "RESOURCE_NOT_FOUND "+location.getUsername());
+			messagingTemplate.convertAndSend("/topic/error/" + location.getUsername(),
+					"RESOURCE_NOT_FOUND " + location.getUsername());
 		}
 	}
 
@@ -81,10 +80,11 @@ public class LocationController {
 	public void nearByAmbulance(LiveLocation userLiveLocation) {
 		try {
 			List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
-			messagingTemplate.convertAndSend("/topic/near-by-ambulance/" + userLiveLocation.getUsername(),
+			messagingTemplate.convertAndSend("/topic/nearby-ambulance/" + userLiveLocation.getUsername(),
 					nearByDrivers);
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(), "RESOURCE_NOT_FOUND "+userLiveLocation.getUsername());
+			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(),
+					"RESOURCE_NOT_FOUND " + userLiveLocation.getUsername());
 		}
 	}
 
@@ -104,7 +104,8 @@ public class LocationController {
 				messagingTemplate.convertAndSend(topic, message);
 			}
 		} catch (Exception e) {
-			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(), "RESOURCE_NOT_FOUND "+userLiveLocation.getUsername());
+			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(),
+					"RESOURCE_NOT_FOUND " + userLiveLocation.getUsername());
 		}
 	}
 
@@ -154,7 +155,7 @@ public class LocationController {
 			}
 		} catch (Exception e) {
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getUserUsername(),
-					"RESOURCE_NOT_FOUND "+driverLiveLocation.getUserUsername());
+					"RESOURCE_NOT_FOUND " + driverLiveLocation.getUserUsername());
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getDriverUsername(),
 					driverLiveLocation.getDriverUsername());
 
@@ -185,7 +186,7 @@ public class LocationController {
 				bookStore.remove(userLiveLocation.getUsername());
 		} catch (Exception e) {
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getUserUsername(),
-					"RESOURCE_NOT_FOUND "+driverLiveLocation.getUserUsername());
+					"RESOURCE_NOT_FOUND " + driverLiveLocation.getUserUsername());
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getDriverUsername(),
 					driverLiveLocation.getDriverUsername());
 
