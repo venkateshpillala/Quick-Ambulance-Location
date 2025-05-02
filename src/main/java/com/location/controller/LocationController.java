@@ -51,15 +51,14 @@ public class LocationController {
 	@Autowired
 	private IDriverService driverService;
 
-	
 	@MessageMapping("/test")
 	public void testMethod(LiveLocation location) {
 		messagingTemplate.convertAndSend("/topic/test/" + location.getUsername(), location);
 	}
 
 	/*
-	 * This method sends driver's longitude and latitude for every 3 seconds to the back end
-	 * and back end live location the data in DB 
+	 * This method sends driver's longitude and latitude for every 3 seconds to the
+	 * back end and back end live location the data in DB
 	 */
 	@MessageMapping("/live-location")
 	public void sendLocationName(LiveLocation location) {
@@ -95,18 +94,24 @@ public class LocationController {
 
 	@MessageMapping("/book")
 	public void bookAmbulance(LiveLocation userLiveLocation) {
+
 		try {
+			System.out.println("User location "+userLiveLocation);
 			bookStore.save(userLiveLocation.getUsername(), userLiveLocation);
 			List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
+			System.out.println("Near by users "+nearByDrivers);
 			for (LiveLocation driverLiveLocation : nearByDrivers) {
 				String message = userLiveLocation.getUsername();
 				String topic = "/topic/alert/" + driverLiveLocation.getUsername();
-				messagingTemplate.convertAndSend(topic, message);
+				messagingTemplate.convertAndSend("/topic/alert/" + driverLiveLocation.getUsername(), message);
+				System.out.println("Message sent to "+driverLiveLocation.getUsername());
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			messagingTemplate.convertAndSend("/topic/error/" + userLiveLocation.getUsername(),
 					"RESOURCE_NOT_FOUND " + userLiveLocation.getUsername());
 		}
+
 	}
 
 	/*

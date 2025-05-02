@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.location.dto.User;
 
-
+//@FeignClient("QUICK-AMBULANCE-DATABASE")
 @FeignClient(name = "QUICK-AMBULANCE-DATABASE", url="https://quick-ambulance-database.onrender.com")
 public interface IUserFeignService {
 	@GetMapping("/user")

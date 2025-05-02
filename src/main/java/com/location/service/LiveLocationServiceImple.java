@@ -27,13 +27,14 @@ public class LiveLocationServiceImple implements ILiveLocationService {
 	@Override
 	public List<LiveLocation> getNearByDrivers(LiveLocation userLiveLocation) {
 		List<LiveLocation> list = feignService.getAllDriverLiveLocations().getBody();
-		if(list == null)
+		if(list == null) {
 			throw new ResourceNotFoundException("NO_DRIVERS_AVAILABLE");
-		
+		}
 		List<LiveLocation> nearByDrivers = new ArrayList<LiveLocation>();
 		for(LiveLocation driverLiveLocation:list) {
 			Double distance = this.calculateDistance(userLiveLocation, driverLiveLocation);
-			if(distance<=20.0) 
+			System.out.println(distance);
+			if(distance<=2000.0) 
 				nearByDrivers.add(driverLiveLocation);
 		}
 		return nearByDrivers;
