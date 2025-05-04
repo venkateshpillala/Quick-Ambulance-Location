@@ -1,8 +1,9 @@
 package com.location.service;
 
-import com.location.dto.DriverLogs;
+import java.util.Map;
+
 
 public interface IDriverLogsService {
 
-	public DriverLogs getDriverLogsByUsernameAndDate(String username);
+	public Map<String, Object> getDriverVehicleNumberAndPhone(String username);
 }

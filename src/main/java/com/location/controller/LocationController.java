@@ -1,6 +1,7 @@
 package com.location.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -125,10 +126,11 @@ public class LocationController {
 		try {
 			LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
 			System.out.println(userLiveLocation);
-			String vehicleNumber = driverLogsService
-					.getDriverLogsByUsernameAndDate(driverLiveLocation.getDriverUsername()).getAmbulance()
-					.getVehicleNumber();
-			Long driverPhone = driverService.getDriverByUsername(driverLiveLocation.getDriverUsername()).getPhone();
+			Map<String, Object> response = driverLogsService.getDriverVehicleNumberAndPhone(
+						driverLiveLocation.getDriverUsername()
+					);
+			String vehicleNumber = (String)response.get("vehicleNumber");
+			Long driverPhone = (Long)response.get("phone");
 			Long userPhone = userService.findUserByUsername(userLiveLocation.getUsername()).getPhone();
 			Double distance = liveLocationService.calculateDistance(userLiveLocation, this.convert(driverLiveLocation))
 					/ 1000.0;

@@ -1,11 +1,10 @@
 package com.location.service;
 
-import java.time.LocalDate;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.location.dto.DriverLogs;
 import com.location.exception.ResourceNotFoundException;
 import com.location.fiegn.IDriverLogsFeignService;
 
@@ -16,11 +15,11 @@ public class DriverLogsServiceImple implements IDriverLogsService {
 	private IDriverLogsFeignService driverFeign;
 
 	@Override
-	public DriverLogs getDriverLogsByUsernameAndDate(String username) {
-		DriverLogs dl = driverFeign.getDriverLogsByUsernameAndDate(username, LocalDate.now()).getBody();
-		if(dl != null)
+	public Map<String, Object> getDriverVehicleNumberAndPhone(String username) {
+		Map<String, Object> response = driverFeign.getDriverPhoneAndVehicleNumber(username).getBody();
+		if(response == null)
 			throw new ResourceNotFoundException("RESOURCE_NOT_FOUND "+username);
-		return dl;
+		return response;
 	}
 
 }
