@@ -15,7 +15,7 @@ public class DriverServiceImple implements IDriverService {
 	@Override
 	public Driver getDriverByUsername(String username) {
 		Driver driver = driverFeign.findByUsername(username).getBody();
-		if(driver != null)
+		if(driver == null)
 			throw new ResourceNotFoundException("RESOURCE_NOT_FOUND "+username);
 		return driver;
 	}

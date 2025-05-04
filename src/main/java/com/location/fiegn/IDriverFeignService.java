@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.location.dto.Driver;
 
-//@FeignClient("QUICK-AMBULANCE-DATABASE")
 @FeignClient(name = "QUICK-AMBULANCE-DATABASE", url="https://quick-ambulance-database.onrender.com")
+//@FeignClient("QUICK-AMBULANCE-DATABASE")
 public interface IDriverFeignService {
 	@GetMapping("/driver")
 	public ResponseEntity<Driver> findByUsername(@RequestParam String username);

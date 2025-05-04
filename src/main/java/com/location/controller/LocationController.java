@@ -99,7 +99,7 @@ public class LocationController {
 			System.out.println("User location "+userLiveLocation);
 			bookStore.save(userLiveLocation.getUsername(), userLiveLocation);
 			List<LiveLocation> nearByDrivers = liveLocationService.getNearByDrivers(userLiveLocation);
-			System.out.println("Near by users "+nearByDrivers);
+			System.out.println("Near by drivers "+nearByDrivers);
 			for (LiveLocation driverLiveLocation : nearByDrivers) {
 				String message = userLiveLocation.getUsername();
 				String topic = "/topic/alert/" + driverLiveLocation.getUsername();
@@ -121,8 +121,10 @@ public class LocationController {
 
 	@MessageMapping("/accept")
 	public void acceptBooking(BookingInfo driverLiveLocation) {
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 		try {
 			LiveLocation userLiveLocation = (LiveLocation) bookStore.get(driverLiveLocation.getUserUsername());
+			System.out.println(userLiveLocation);
 			String vehicleNumber = driverLogsService
 					.getDriverLogsByUsernameAndDate(driverLiveLocation.getDriverUsername()).getAmbulance()
 					.getVehicleNumber();
@@ -157,8 +159,10 @@ public class LocationController {
 				String driverTopic = "/topic/driver/" + driverLiveLocation.getDriverUsername();
 				messagingTemplate.convertAndSend(userTopic, userDTO);
 				messagingTemplate.convertAndSend(driverTopic, driverDTO);
+				System.out.println("sent");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getUserUsername(),
 					"RESOURCE_NOT_FOUND " + driverLiveLocation.getUserUsername());
 			messagingTemplate.convertAndSend("/topic/error/" + driverLiveLocation.getDriverUsername(),
